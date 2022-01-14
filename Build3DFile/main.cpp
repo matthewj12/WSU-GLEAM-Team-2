@@ -15,15 +15,17 @@ float degToRad(float p_deg) {
 	return p_deg * 3.14159265 / 180;
 }
 
-struct Vector3F {
+struct vector3f {
 	float x, y, z;
 
-	Vector3F(string p_text) {
+	vector3f(string p_text) {
 		int first_comma_index = p_text.find(", ", 0);
 		int second_comma_index = p_text.find(", ", first_comma_index + 2);
 		float pan, tilt, dist;
 
 		try {
+			// Each line is:
+			// distance pan_angle tilt_angle
 			dist = stof(p_text.substr(0, first_comma_index));
 			pan = stof(p_text.substr(first_comma_index + 2, second_comma_index - first_comma_index - 2));
 			tilt = stof(p_text.substr(second_comma_index + 2));
@@ -48,11 +50,11 @@ struct Vector3F {
 };
 
 struct Triangle {
-	Vector3F a, b, c;
+	vector3f a, b, c;
 };
 
-vector<Vector3F> loadScanData(string p_path) {
-	vector<Vector3F> points;
+vector<vector3f> loadScanData(string p_path) {
+	vector<vector3f> points;
 
 	ifstream file(p_path);
 	file.clear();
@@ -64,7 +66,7 @@ vector<Vector3F> loadScanData(string p_path) {
 			getline(file, cur_line);
 
 			if (cur_line != "") {
-				points.push_back(Vector3F(cur_line));
+				points.push_back(vector3f(cur_line));
 			}
 		}
 	}
@@ -77,7 +79,7 @@ vector<Vector3F> loadScanData(string p_path) {
 	return points;
 }
 
-vector<Triangle> makeMeshFromPoints(vector<Vector3F>& p_points) {
+vector<Triangle> makeMeshFromPoints(vector<vector3f>& p_points) {
 	vector<Triangle> to_return;
 
 	for (int i = tilt_steps; i < p_points.size(); i++) {
@@ -152,12 +154,12 @@ void meshToSTL(vector<Triangle>& p_tris, string p_output_path) {
 	}
 }
 
-using 3dMesh = vector<Triangle>;
+using mesh3d = vector<Triangle>;
 
 int main() {
-	vector<Vector3F> dists_and_angles = loadScanData("ScanData.txt");
+	vector<vector3f> dists_and_angles = loadScanData("ScanData.txt");
 
-	3dMesh mesh = makeMeshFromPoints(dists_and_angles);
+	mesh3d mesh = makeMeshFromPoints(dists_and_angles);
 
 	meshToSTL(mesh, "output.stl");
 }
