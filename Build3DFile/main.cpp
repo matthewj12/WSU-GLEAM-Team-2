@@ -15,10 +15,10 @@ float degToRad(float p_deg) {
 	return p_deg * 3.14159265 / 180;
 }
 
-struct Point3D {
+struct Vector3F {
 	float x, y, z;
 
-	Point3D(string p_text) {
+	Vector3F(string p_text) {
 		int first_comma_index = p_text.find(", ", 0);
 		int second_comma_index = p_text.find(", ", first_comma_index + 2);
 		float pan, tilt, dist;
@@ -48,10 +48,36 @@ struct Point3D {
 };
 
 struct Triangle {
-	Point3D a, b, c;
+	Vector3F a, b, c;
 };
 
-vector<Triangle> makeMeshFromPoints(vector<Point3D>& p_points) {
+vector<Vector3F> loadScanData(string p_path) {
+	vector<Vector3F> points;
+
+	ifstream file(p_path);
+	file.clear();
+	file.seekg(0, ios::beg);
+
+	if (file.is_open()) {
+		while (!file.eof()) {
+			string cur_line;
+			getline(file, cur_line);
+
+			if (cur_line != "") {
+				points.push_back(Vector3F(cur_line));
+			}
+		}
+	}
+	else {
+		cout << "Could not open file '" << p_path << "'" << endl;
+	}
+
+	file.close();
+
+	return points;
+}
+
+vector<Triangle> makeMeshFromPoints(vector<Vector3F>& p_points) {
 	vector<Triangle> to_return;
 
 	for (int i = tilt_steps; i < p_points.size(); i++) {
@@ -87,40 +113,22 @@ vector<Triangle> makeMeshFromPoints(vector<Point3D>& p_points) {
 	return to_return;
 }
 
-vector<Point3D> loadScanData(string p_path) {
-	vector<Point3D> points;
-
-	ifstream file(p_path);
-	file.clear();
-	file.seekg(0, ios::beg);
-
-	if (file.is_open()) {
-		while (!file.eof()) {
-			string cur_line;
-			getline(file, cur_line);
-
-			if (cur_line != "") {
-				points.push_back(Point3D(cur_line));
-			}
-		}
-	}
-	else {
-		cout << "Could not open file '" << p_path << "'" << endl;
-	}
-
-	file.close();
-
-	return points;
-}
-
 void meshToSTL(vector<Triangle>& p_tris, string p_output_path) {
-	//facet normal nx ny nz
-	//	outer loop
-	//		vertex v1x v1y v1z
-	//		vertex v2x v2y v2z
-	//		vertex v3x v3y v3z
-	//	endloop
-	//endfacet
+	/*
+	
+	facet normal nx ny nz
+		outer loop
+			vertex v1x v1y v1z
+			vertex v2x v2y v2z
+			vertex v3x v3y v3z
+		endloop
+	endfacet
+	
+	3D Modeling/Viewing programs automatically fill-in the data for the normal 
+	(nx, ny, nz), which signifies the side from which the triangle is visible
+	en.wikipedia.org/wiki/Normal_(geometry)
+	
+	*/
 
 	ofstream file(p_output_path);
 
@@ -128,25 +136,6 @@ void meshToSTL(vector<Triangle>& p_tris, string p_output_path) {
 		file << "solid <mesh>" << endl;
 
 		for (Triangle t : p_tris) {
-			/*Point3D norm, vec1, vec2;
-
-			vec1.x = t.b.x - t.a.x;
-			vec1.y = t.b.y - t.a.y;
-			vec1.z = t.b.z - t.a.z;
-
-			vec2.x = t.c.x - t.a.x;
-			vec2.y = t.c.y - t.a.y;
-			vec2.z = t.c.z - t.a.z;
-
-			norm.x = vec1.y*vec2.z - vec1.z*vec2.y;
-			norm.y = vec1.z*vec2.x - vec1.x*vec2.z;
-			norm.z = vec1.x*vec2.y - vec1.y*vec2.x;
-
-			float norm_len = sqrtf(norm.x * norm.x + norm.y * norm.y + norm.z * norm.z);
-			norm.x /= norm_len;
-			norm.y /= norm_len;
-			norm.z /= norm_len;*/
-
 			file << "facet normal 0 0 0" << endl;
 			file << "\touter loop" << endl;
 			file << "\t\t vertex " << t.a.x << " " << t.a.y << " " << t.a.z << endl;
@@ -163,10 +152,12 @@ void meshToSTL(vector<Triangle>& p_tris, string p_output_path) {
 	}
 }
 
+using 3dMesh = vector<Triangle>;
+
 int main() {
-	vector<Point3D> points = loadScanData("ScanData.txt");
+	vector<Vector3F> dists_and_angles = loadScanData("ScanData.txt");
 
-	vector<Triangle> tris = makeMeshFromPoints(points);
+	3dMesh mesh = makeMeshFromPoints(dists_and_angles);
 
-	meshToSTL(tris, "output.stl");
+	meshToSTL(mesh, "output.stl");
 }
