@@ -8,8 +8,8 @@
 
 using namespace std;
 // TODO: put these in a file in such a way that the Arduio code can also read them (avoid redundancy).
-const int pan_steps = 18;
-const int tilt_steps = 2;
+const int pan_steps = 10;
+const int tilt_steps = 10;
 
 float degToRad(float p_deg) {
 	return p_deg * 3.14159265 / 180;
@@ -27,17 +27,16 @@ struct vector3f {
 			// Each line is:
 			// distance pan_angle tilt_angle
 			dist = stof(p_text.substr(0, first_comma_index));
-			pan = stof(p_text.substr(first_comma_index + 2, second_comma_index - first_comma_index - 2));
-			tilt = stof(p_text.substr(second_comma_index + 2));
+			pan = stof(p_text.substr(first_comma_index+2, second_comma_index-first_comma_index-2));
+			tilt = stof(p_text.substr(second_comma_index+2));
 
 			tilt = degToRad(tilt);
 			pan = degToRad(pan);
 
-			float xy_dist = cos(tilt) * dist; // xy component of dist
-
-			x = cos(pan) * xy_dist;
-			y = sin(pan) * xy_dist;
-			z = sin(tilt) * xy_dist;
+			// Math magic
+			x = dist * cos(tilt) * cos(pan);
+			y = dist * cos(tilt) * sin(pan);
+			z = dist * sin(tilt);
 		}
 		catch (const exception& e) {
 			cerr << "Error: " << e.what() << endl;
@@ -83,14 +82,15 @@ vector<Triangle> makeMeshFromPoints(vector<vector3f>& p_points) {
 	vector<Triangle> to_return;
 
 	for (int i = tilt_steps; i < p_points.size(); i++) {
-
+		// First triangle in tilt-column
 		if (i % tilt_steps == 0) {
 			to_return.push_back(Triangle{
 				p_points[i-tilt_steps], 
 				p_points[i], 
-				p_points[i - tilt_steps + 1]
+				p_points[i-tilt_steps+1]
 			});
 		}
+		// Last triangle in tilt-column
 		else if ((i + 1) % tilt_steps == 0) {
 			to_return.push_back(Triangle{
 				p_points[i-tilt_steps], 
@@ -98,16 +98,17 @@ vector<Triangle> makeMeshFromPoints(vector<vector3f>& p_points) {
 				p_points[i]
 			});
 		}
+		// In-between triangles in tilt-column
 		else {
-			to_return.push_back(Triangle{
-				p_points[i-tilt_steps], 
-				p_points[i], 
-				p_points[i-tilt_steps+1]
-			});
 			to_return.push_back(Triangle{
 				p_points[i-tilt_steps], 
 				p_points[i-1], 
 				p_points[i]
+			});
+			to_return.push_back(Triangle{
+				p_points[i-tilt_steps], 
+				p_points[i], 
+				p_points[i-tilt_steps+1]
 			});
 		}
 	}
