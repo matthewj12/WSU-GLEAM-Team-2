@@ -14,6 +14,8 @@ LIDARLite lidar;
 const int tilt_0_offset = 5;
 const int pan_0_offset = 0;
 
+// 0 degrees tilt is parallel with ground, +90 is straight up
+// 0 degrees pan is straight forward, +90 is left (if we are looking from behind when at 0)
 const int pan_min = -45;
 const int pan_max = 45;
 const int tilt_min = 0;
