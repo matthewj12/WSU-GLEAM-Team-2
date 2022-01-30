@@ -4,14 +4,11 @@
 
 // https://learn.sparkfun.com/tutorials/lidar-lite-v3-hookup-guide/all
 
-const int pan_servo_zero_offset = 0;
-const int tilt_servo_zero_offset = 5;
-const int pan_servo_range = 180;
-const int tilt_servo_range = 175;
-const int pan_steps = 5;
-const int tilt_steps = 5;
-const int pan_intvl  = (int) (pan_servo_range / pan_steps);
-const int tilt_intvl = (int) (tilt_servo_range / tilt_steps);
+const int pan_servo_min = 0;
+const int pan_servo_max = 180;
+const int tilt_servo_min = 5;
+const int tilt_servo_max = 180;
+
 
 Servo pan_servo, tilt_servo;
 int pan_pos = 0;
@@ -21,20 +18,23 @@ int delay_for_one_deg = 5;
 LIDARLite lidar;
 
 void resetServoPos() {
-    pan_servo.write(pan_servo_zero_offset);
-    tilt_servo.write(tilt_servo_zero_offset);
+    pan_servo.write(pan_servo_min);
+    tilt_servo.write(tilt_servo_min);
     delay(300);
 }
 
-void sweepAndMap(Servo& pan_servo, Servo& tilt_servo) {
+void sweepAndMap(int pan_steps=10, int tilt_steps=5) {
+    int pan_intvl  = (int) ((pan_servo_max - pan_servo_min) / (pan_steps - 1));
+    int tilt_intvl = (int) ((tilt_servo_max - tilt_servo_min) / (tilt_steps - 1));
+
     resetServoPos();
     
-    for (int pan_pos = pan_servo_zero_offset; pan_pos <= 180; pan_pos += pan_intvl) {
+    for (int pan_pos = pan_servo_min; pan_pos <= 180; pan_pos += pan_intvl) {
         pan_servo.write(pan_pos);
-        tilt_servo.write(tilt_servo_zero_offset);
+        tilt_servo.write(tilt_servo_min);
         delay(300);
         
-        for (int tilt_pos = tilt_servo_zero_offset; tilt_pos <= 180; tilt_pos += tilt_intvl) {
+        for (int tilt_pos = tilt_servo_min; tilt_pos <= 180; tilt_pos += tilt_intvl) {
             tilt_servo.write(tilt_pos);
             delay(tilt_intvl * delay_for_one_deg);
             
@@ -60,34 +60,60 @@ void setup() {
     
     pan_servo.attach(3);
     tilt_servo.attach(9);
-    
-    Serial.println("Starting sweep...");
-    Serial.println();
-    
-    sweepAndMap(pan_servo, tilt_servo);
+
+    resetServoPos();
 }
 
 void acceptSerialInputControlServo() {
-    Serial.println("Enter pan and tilt positions: ");
-    while (Serial.available() == 0) {
-      pan_servo.write(pan_pos);
-      tilt_servo.write(tilt_pos);    
-    }
-    pan_pos = Serial.parseInt();
-    tilt_pos = Serial.parseInt();
-    Serial.print("Pan pos = ");
-    Serial.print(pan_pos);
-    Serial.print(", Tilt pos = ");
-    Serial.print(tilt_pos);
-    Serial.println();
-
-    pan_servo.write(pan_pos);
-    tilt_servo.write(tilt_pos);
-    Serial.println("Moving...");
-    delay(300);
-
+    Serial.println("Enter command: ");
     while (Serial.available() == 0) {}
-    Serial.readString();
+    String in = Serial.readString();
+    in.remove(in.length()-1); // Remove the newline character
+
+    if (in.length() == 1 && in.equals("s")) {
+        sweepAndMap();
+    }
+    else {
+        String cmd = in.substring(0, 2);
+        if (cmd.equals("p ")) {
+            int pan_pos = in.substring(2, in.length()).toInt();
+            Serial.print("Setting pan position to ");
+            pan_servo.write(pan_pos);
+            Serial.print(pan_pos);
+            Serial.println("...");
+            delay(300);
+        }
+        else if (cmd.equals("t ")) {
+            int tilt_pos = in.substring(2, in.length()).toInt();
+            Serial.print("Setting tilt position to ");
+            tilt_servo.write(tilt_pos);
+            Serial.print(tilt_pos);
+            Serial.println("...");
+            delay(300);
+        }
+        else if (cmd.equals("s ") && in.length() >= 5) {
+            String pan_steps_str, tilt_steps_str;
+            int i = 2;
+            for (i; in[i] != ' '; i++) {
+                pan_steps_str += in[i];
+            }
+            i++;
+            for (i; i < in.length(); i++) {
+                tilt_steps_str += in[i];
+            }
+
+            Serial.println("Sweeping with " + pan_steps_str  + " pan steps and "
+                                          + tilt_steps_str + " tilt steps...");
+            
+            sweepAndMap(pan_steps_str.toInt(), tilt_steps_str.toInt());
+        }
+        else {
+            Serial.println("Invalid input. ");
+        }
+    }
+    
+    //while (Serial.available() == 0) {}
+    //Serial.readString();
 }
 
 void loop() {
