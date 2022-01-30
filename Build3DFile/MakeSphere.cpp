@@ -17,10 +17,10 @@ int getRandInt(int p_min, int p_max) {
 
 // steps = number of distinct rotational positions for points
 const int pan_steps = 10;
-const int tilt_steps = 10;
-const int pan_min = -90;
-const int pan_max = 90;
-const int tilt_min = 0;
+const int tilt_steps = 5;
+const int pan_min = 45;
+const int pan_max = 135;
+const int tilt_min = -45;
 const int tilt_max = 90;
 const string output_path = "ScanData.txt";
 

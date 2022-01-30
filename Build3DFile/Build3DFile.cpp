@@ -8,8 +8,8 @@
 
 using namespace std;
 // TODO: put these in a file in such a way that the Arduio code can also read them (avoid redundancy).
-const int pan_steps = 10;
-const int tilt_steps = 10;
+const int pan_steps = 46;
+const int tilt_steps = 23;
 
 float degToRad(float p_deg) {
 	return p_deg * 3.14159265 / 180;
