@@ -147,5 +147,5 @@ void loop() {
     // Remove the newline character
     serial_in.remove(serial_in.length()-1);
     
-	acceptSerialInputControlServo(serial_in);
+    acceptSerialInputControlServo(serial_in);
 }
