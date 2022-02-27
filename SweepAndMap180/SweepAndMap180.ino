@@ -76,8 +76,8 @@ void sweepAndMap(int pan_steps=46, int tilt_steps=23) {
 }
 
 void setup() {
-   lidar.begin(0, true);
-   lidar.configure(0);
+    lidar.begin(0, true);
+    lidar.configure(0);
 
     Serial.begin(9600);
     
@@ -87,12 +87,7 @@ void setup() {
     resetServoPos();
 }
 
-void acceptSerialInputControlServo() {
-    Serial.println("Enter command: ");
-    while (Serial.available() == 0) {}
-    String in = Serial.readString();
-    in.remove(in.length()-1); // Remove the newline character
-
+void acceptSerialInputControlServo(String in) {
     // Sweep using default pan and tilt steps
     if (in.length() == 1 && in.equals("s")) {
         sweepAndMap();
@@ -144,5 +139,13 @@ void acceptSerialInputControlServo() {
 }
 
 void loop() {
-	acceptSerialInputControlServo();
+    Serial.println("Enter command: ");
+    while (Serial.available() == 0) {
+        delay(50);
+    }
+    String serial_in = Serial.readString();
+    // Remove the newline character
+    serial_in.remove(serial_in.length()-1);
+    
+	acceptSerialInputControlServo(serial_in);
 }
