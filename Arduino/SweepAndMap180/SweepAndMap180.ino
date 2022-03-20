@@ -178,6 +178,7 @@ void acceptSerialInputControlServo(String in) {
 }
 
 void setup() {
+    Serial.begin(9600);
     Wire.begin();
     while (! Serial) {
         delay(1);
@@ -191,8 +192,6 @@ void setup() {
   
     lidar.begin(0, true);
     lidar.configure(0);
-
-    Serial.begin(9600);
     
     pan_servo.attach(3);
     tilt_servo.attach(9);
