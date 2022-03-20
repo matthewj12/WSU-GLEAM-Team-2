@@ -178,11 +178,14 @@ void acceptSerialInputControlServo(String in) {
 }
 
 void setup() {
-    Serial.begin(9600);
     Wire.begin();
+    tcaSelect(1);
+    Serial.begin(9600);
     while (! Serial) {
         delay(1);
     }
+
+    delay(800);
   
     Serial.println("Adafruit VL53L0X test");
     if (!lox.begin()) {
