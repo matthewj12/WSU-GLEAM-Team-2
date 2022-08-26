@@ -10,6 +10,12 @@ time.sleep(1.2)
 # TODO: Figure out how to get the serial to recieve 
 # the output after the first command is entered
 
+# Update: If I remember correctly, there were some problem(s) with certain 
+# input(s) not being received properly (i.e. you execute the script, enter 
+# some text, press enter, nothing happens, enter some more text, press enter, 
+# and from now onwards it now works as expected.
+
+
 def write_read(cmd_input):
     global cur_angle_index
 
